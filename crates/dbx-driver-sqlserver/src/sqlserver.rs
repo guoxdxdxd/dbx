@@ -325,12 +325,17 @@ pub async fn connect(
     user: &str,
     pass: &str,
     database: Option<&str>,
-    _url_params: Option<&str>,
+    url_params: Option<&str>,
     timeout: Duration,
 ) -> Result<SqlServerClient, String> {
-    connect_with_port_explicit(host, port, false, user, pass, database, timeout).await
+    connect_with_port_explicit(host, port, false, user, pass, database, url_params, timeout).await
 }
 
+/// Connect with an explicit port flag and optional JDBC-style URL params.
+///
+/// When `encrypt=false` / `sqlserverEncryption=disabled` is present, skip the
+/// `EncryptionLevel::Required` attempt so non-TLS servers are not blocked for a
+/// full connect timeout before the Off/NotSupported fallbacks run.
 pub async fn connect_with_port_explicit(
     host: &str,
     port: u16,
@@ -338,8 +343,20 @@ pub async fn connect_with_port_explicit(
     user: &str,
     pass: &str,
     database: Option<&str>,
+    url_params: Option<&str>,
     timeout: Duration,
 ) -> Result<SqlServerClient, String> {
+    if sqlserver_native_encryption_disabled(url_params) {
+        return try_connect_legacy_sqlserver_encryption(host, port, port_explicit, user, pass, database, timeout)
+            .await
+            .map_err(|fallback_errors| {
+                format!(
+                    "SQL Server connection failed with encryption disabled:\n{}",
+                    sqlserver_legacy_fallback_summary(&fallback_errors)
+                )
+            });
+    }
+
     match try_connect(host, port, port_explicit, user, pass, database, tiberius::EncryptionLevel::Required, timeout)
         .await
     {

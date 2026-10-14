@@ -25,7 +25,7 @@ pub async fn connect_with_port_explicit(
     timeout: Duration,
 ) -> Result<SqlServerClient, String> {
     if !sql_server_2000() {
-        return native::connect_with_port_explicit(host, port, port_explicit, user, password, database, timeout)
+        return native::connect_with_port_explicit(host, port, port_explicit, user, password, database, None, timeout)
             .await
             .map(|client| SqlServerClient::Native(Box::new(client)));
     }

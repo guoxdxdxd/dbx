@@ -592,7 +592,7 @@ class SqlServerLegacyAgentTest {
     }
 
     @Test
-    void legacyTlsUrlHonorsExplicitProtocolAndRetainsEncryption() {
+    void legacyTlsUrlHonorsDisabledEncryptionAndSkipsSslProtocol() {
         ConnectParams params = new ConnectParams(
             "db.example.com",
             14330,
@@ -605,7 +605,7 @@ class SqlServerLegacyAgentTest {
         );
 
         Assertions.assertEquals(
-            "jdbc:sqlserver://db.example.com:14330;databaseName=appdb;applicationName=dbx;encrypt=true;trustServerCertificate=true;sslProtocol=TLSv1.2",
+            "jdbc:sqlserver://db.example.com:14330;databaseName=appdb;applicationName=dbx;encrypt=false;trustServerCertificate=true",
             SqlServerLegacyAgent.legacyTlsUrl(params)
         );
     }
@@ -682,7 +682,7 @@ class SqlServerLegacyAgentTest {
         );
 
         Assertions.assertEquals(
-            "jdbc:sqlserver://db.example.com:1433;databaseName=custom;applicationName=dbx;encrypt=true;trustServerCertificate=true;sslProtocol=TLSv1.2",
+            "jdbc:sqlserver://db.example.com:1433;databaseName=custom;applicationName=dbx;encrypt=false;trustServerCertificate=true",
             SqlServerLegacyAgent.legacyTlsUrl(params)
         );
     }
