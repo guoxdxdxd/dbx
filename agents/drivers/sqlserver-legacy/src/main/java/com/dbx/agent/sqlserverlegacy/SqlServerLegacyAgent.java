@@ -798,15 +798,17 @@ public final class SqlServerLegacyAgent extends ConfiguredJdbcAgent {
             normalized = normalized.substring(1, normalized.length() - 1).replace("}}", "}").toLowerCase(Locale.ROOT);
         }
         if (normalized.equals("disabled") || normalized.equals("disable") || normalized.equals("false")
-            || normalized.equals("0") || normalized.equals("off") || normalized.equals("no")
-            || normalized.equals("danger_plaintext")) {
+            || normalized.equals("0") || normalized.equals("off") || normalized.equals("no")) {
             return "false";
         }
         if (normalized.equals("true") || normalized.equals("1") || normalized.equals("yes")
             || normalized.equals("on") || normalized.equals("required")) {
             return "true";
         }
-        return "true";
+        // strict (TDS 8.0) is not supported by this legacy driver path; other unrecognized
+        // values are rejected instead of silently downgraded to the encrypted default.
+        throw new IllegalArgumentException(
+            "Unsupported SQL Server encrypt value '" + value.trim() + "'; use true, false or strict");
     }
 
     /** Returns the last matching property value for any of the given keys. */

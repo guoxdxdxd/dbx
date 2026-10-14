@@ -611,6 +611,26 @@ class SqlServerLegacyAgentTest {
     }
 
     @Test
+    void legacyTlsUrlRejectsUnsupportedEncryptValueInsteadOfSilentDefault() {
+        ConnectParams params = new ConnectParams(
+            "db.example.com",
+            14330,
+            "appdb",
+            "sa",
+            "secret",
+            "applicationName=dbx;encrypt=strict",
+            "",
+            false
+        );
+
+        IllegalArgumentException error = Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> SqlServerLegacyAgent.legacyTlsUrl(params)
+        );
+        Assertions.assertTrue(error.getMessage().contains("Unsupported SQL Server encrypt value 'strict'"));
+    }
+
+    @Test
     void legacyTlsUrlKeepsNamedInstanceWithoutPort() {
         ConnectParams params = new ConnectParams(
             "db.example.com\\SQLEXPRESS",

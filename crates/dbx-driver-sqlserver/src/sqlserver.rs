@@ -347,14 +347,10 @@ pub async fn connect_with_port_explicit(
     timeout: Duration,
 ) -> Result<SqlServerClient, String> {
     if sqlserver_native_encryption_disabled(url_params) {
+        let skipped = "encryption was disabled by encrypt=false / sqlserverEncryption=disabled".to_string();
         return try_connect_legacy_sqlserver_encryption(host, port, port_explicit, user, pass, database, timeout)
             .await
-            .map_err(|fallback_errors| {
-                format!(
-                    "SQL Server connection failed with encryption disabled:\n{}",
-                    sqlserver_legacy_fallback_summary(&fallback_errors)
-                )
-            });
+            .map_err(|fallback_errors| sqlserver_connect_failure_message(&skipped, &fallback_errors));
     }
 
     match try_connect(host, port, port_explicit, user, pass, database, tiberius::EncryptionLevel::Required, timeout)
